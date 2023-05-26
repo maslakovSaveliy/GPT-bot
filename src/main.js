@@ -4,23 +4,28 @@ import { code } from "telegraf/format";
 import config from "config";
 import { ogg } from "./ogg.js";
 import { openai } from "./openai.js";
-
-const INITIAL_SESSION = {
-  messages: [],
-};
+import { removeFile } from "./utils.js";
 
 const bot = new Telegraf(config.get("TELEGRAM_TOKEN"));
 
 bot.use(session());
 
 bot.command("new", async (ctx) => {
-  ctx.session = INITIAL_SESSION;
+  ctx.session = {
+    messages: [],
+  };
   await ctx.reply(code("Жду вашего сообщения!"));
 });
 
-bot.command("start", async (ctx) => {
-  ctx.session = INITIAL_SESSION;
-  await ctx.reply(code("Жду вашего сообщения!"));
+bot.start(async (ctx) => {
+  ctx.session = {
+    messages: [],
+  };
+  await ctx.reply(
+    code(`Жду вашего сообщения!
+Для запуска нового диалога просто введите /new
+  `)
+  );
 });
 
 bot.on(message("voice"), async (ctx) => {
@@ -33,6 +38,7 @@ bot.on(message("voice"), async (ctx) => {
     const mp3Path = await ogg.toMp3(oggPath, userID);
 
     const text = await openai.transcription(mp3Path);
+    removeFile(mp3Path);
     await ctx.reply(code(`Ващ запрос: ${text}`));
     ctx.session.messages.push({ role: openai.roles.USER, content: text });
 

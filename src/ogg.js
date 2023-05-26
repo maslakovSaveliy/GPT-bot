@@ -39,7 +39,9 @@ class OggConverter {
       return new Promise((resolve) => {
         const stream = createWriteStream(oggPath);
         res.data.pipe(stream);
-        stream.on("finish", () => resolve(oggPath));
+        stream.on("finish", () => {
+          resolve(oggPath);
+        });
       });
     } catch (e) {
       console.log(e.message);
