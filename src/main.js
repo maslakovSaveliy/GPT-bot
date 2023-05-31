@@ -1,14 +1,21 @@
-import { Telegraf, session } from "telegraf";
+import { Telegraf, session, Scenes } from "telegraf";
 import { message } from "telegraf/filters";
 import { code } from "telegraf/format";
 import config from "config";
 import { ogg } from "./ogg.js";
 import { openai } from "./openai.js";
 import { removeFile } from "./utils.js";
+import SceneGenerator from "./Scenes.js";
+
+const curScene = new SceneGenerator();
+const imageGenScene = curScene.GenImageScene();
 
 const bot = new Telegraf(config.get("TELEGRAM_TOKEN"));
 
+const stage = new Scenes.Stage([imageGenScene]);
+
 bot.use(session());
+bot.use(stage.middleware());
 
 bot.command("new", async (ctx) => {
   const userID = ctx.from.id;
@@ -16,6 +23,16 @@ bot.command("new", async (ctx) => {
     [userID]: [],
   };
   await ctx.reply(code("Жду вашего сообщения!"));
+});
+
+bot.command("generateImage", async (ctx) => {
+  ctx.scene.enter("imageGenScene");
+});
+
+bot.help(async (ctx) => {
+  await ctx.reply(`/new - создание нового диалога
+/generateImage - переход в режим генерации изображений
+/leave - выход из режима генерации изображений`);
 });
 
 bot.start(async (ctx) => {
@@ -26,6 +43,8 @@ bot.start(async (ctx) => {
   await ctx.reply(
     code(`Жду вашего сообщения!
 Для запуска нового диалога просто введите /new
+Если хотите сгенерировать изображение введите /generateImage
+Если понадобится помошь, введите /help
   `)
   );
 });
@@ -53,7 +72,12 @@ bot.on(message("voice"), async (ctx) => {
       content: res.content,
     });
 
-    ctx.telegram.editMessageText(ctx.chat.id, message_id, 0, code("Ответ:"));
+    await ctx.telegram.editMessageText(
+      ctx.chat.id,
+      message_id,
+      0,
+      code("Ответ:")
+    );
     await ctx.reply(res.content);
   } catch (e) {
     console.log(e.message);
@@ -79,7 +103,12 @@ bot.on(message("text"), async (ctx) => {
       content: res.content,
     });
 
-    ctx.telegram.editMessageText(ctx.chat.id, message_id, 0, code("Ответ:"));
+    await ctx.telegram.editMessageText(
+      ctx.chat.id,
+      message_id,
+      0,
+      code("Ответ:")
+    );
     await ctx.reply(res.content);
   } catch (e) {
     console.log(e.message);

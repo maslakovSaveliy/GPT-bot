@@ -37,6 +37,19 @@ class OpenAI {
       console.log(e.message);
     }
   }
+
+  async ImageGenerate(prompt) {
+    try {
+      const res = await this.openai.createImage({
+        prompt: prompt,
+        n: 1,
+        size: "1024x1024",
+      });
+      return res.data;
+    } catch (e) {
+      console.log(e.message);
+    }
+  }
 }
 
 export const openai = new OpenAI(config.get("OPENAI_KEY"));
