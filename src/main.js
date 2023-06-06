@@ -25,13 +25,13 @@ bot.command("new", async (ctx) => {
   await ctx.reply(code("Жду вашего сообщения!"));
 });
 
-bot.command("generateImage", async (ctx) => {
+bot.command("image", async (ctx) => {
   ctx.scene.enter("imageGenScene");
 });
 
 bot.help(async (ctx) => {
   await ctx.reply(`/new - создание нового диалога
-/generateImage - переход в режим генерации изображений
+/image - переход в режим генерации изображений
 /leave - выход из режима генерации изображений`);
 });
 
@@ -43,7 +43,7 @@ bot.start(async (ctx) => {
   await ctx.reply(
     code(`Жду вашего сообщения!
 Для запуска нового диалога просто введите /new
-Если хотите сгенерировать изображение введите /generateImage
+Если хотите сгенерировать изображение введите /image
 Если понадобится помошь, введите /help
   `)
   );
@@ -55,7 +55,7 @@ bot.on(message("voice"), async (ctx) => {
     [userID]: [],
   };
   try {
-    const { message_id } = await ctx.reply(code("Выолнение запроса..."));
+    const { message_id } = await ctx.reply("Выолнение запроса...");
     const link = await ctx.telegram.getFileLink(ctx.message.voice.file_id);
     const userID = String(ctx.message.from.id);
     const oggPath = await ogg.create(link.href, userID);
@@ -72,14 +72,10 @@ bot.on(message("voice"), async (ctx) => {
       content: res.content,
     });
 
-    await ctx.telegram.editMessageText(
-      ctx.chat.id,
-      message_id,
-      0,
-      code("Ответ:")
-    );
     await ctx.reply(res.content);
+    await ctx.telegram.deleteMessage(ctx.chat.id, message_id);
   } catch (e) {
+    await ctx.reply("Произошла ошибка, перезагрузите бота командой /start");
     console.log(e.message);
   }
 });
@@ -90,7 +86,7 @@ bot.on(message("text"), async (ctx) => {
     [userID]: [],
   };
   try {
-    const { message_id } = await ctx.reply(code("Выолнение запроса..."));
+    const { message_id } = await ctx.reply("Выолнение запроса...");
 
     ctx.session[userID].push({
       role: openai.roles.USER,
@@ -103,14 +99,10 @@ bot.on(message("text"), async (ctx) => {
       content: res.content,
     });
 
-    await ctx.telegram.editMessageText(
-      ctx.chat.id,
-      message_id,
-      0,
-      code("Ответ:")
-    );
     await ctx.reply(res.content);
+    await ctx.telegram.deleteMessage(ctx.chat.id, message_id);
   } catch (e) {
+    await ctx.reply("Произошла ошибка, перезагрузите бота командой /start");
     console.log(e.message);
   }
 });

@@ -17,18 +17,20 @@ class SceneGenerator {
 
     imageGenScene.on("text", async (ctx) => {
       try {
-        await ctx.reply("Выполняется запрос...");
+        const { message_id } = await ctx.reply("Выолнение запроса...");
         let prompt = await ctx.message.text;
         const res = await openai.ImageGenerate(prompt);
-        console.log(res);
         if (res === undefined) {
           ctx.reply("Ошибка, попробуй ввести запрос заново");
+        } else {
+          await ctx.replyWithPhoto(res.data[0].url, "image.jpg");
         }
-        await ctx.replyWithPhoto(res.data[0].url, "image.jpg");
+        await ctx.telegram.deleteMessage(ctx.chat.id, message_id);
         await ctx.reply(
           "Если хочешь выйти из генерации изображения используй /leave"
         );
       } catch (e) {
+        await ctx.reply("Произошла ошибка, перезагрузите бота командой /start");
         console.log(e.message);
       }
     });
