@@ -20,9 +20,10 @@ class OpenAI {
         model: "gpt-3.5-turbo",
         messages,
       });
-      return res.data.choices[0].message;
+      console.log(res)
+      return res;
     } catch (e) {
-      console.log(e.message);
+      console.log(e);
     }
   }
 
