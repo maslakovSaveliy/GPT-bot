@@ -164,10 +164,9 @@ bot.on(message("text"), async (ctx) => {
 
     await ctx.reply(res.content);
     await ctx.telegram.deleteMessage(ctx.chat.id, message_id);
-    console.log(ctx.session[userID]);
   } catch (e) {
     await ctx.reply("Произошла ошибка, перезагрузите бота командой /start");
-    console.log(e.message, "here");
+    console.log(e.message);
   }
 });
 
