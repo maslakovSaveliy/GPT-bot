@@ -1,5 +1,9 @@
-import { Scenes } from "telegraf";
+import { Scenes, Telegraf } from "telegraf";
 import { openai } from "./openai.js";
+import User from "./User.js";
+import config from "config";
+
+const bot = new Telegraf(config.get("TELEGRAM_TOKEN"));
 
 class SceneGenerator {
   GenImageScene() {
@@ -68,13 +72,21 @@ class SceneGenerator {
         await users.forEach(async (user, i) => {
           setTimeout(async () => {
             if (ctx.message.text) {
-              await bot.telegram.sendMessage(user.chatId, msg);
+              try {
+                await bot.telegram.sendMessage(user.chatId, msg);
+              } catch (e) {
+                console.log("BOT WAS BLOCKED");
+              }
             } else {
-              msg = ctx.message.caption || "";
+              try {
+                msg = ctx.message.caption || "";
 
-              await bot.telegram.sendPhoto(user.chatId, photoPath.file_id, {
-                caption: msg,
-              });
+                await bot.telegram.sendPhoto(user.chatId, photoPath.file_id, {
+                  caption: msg,
+                });
+              } catch (e) {
+                console.log("BOT WAS BLOCKED");
+              }
             }
           }, 100 * ++i);
         });
