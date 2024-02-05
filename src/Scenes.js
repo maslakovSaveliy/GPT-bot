@@ -43,6 +43,49 @@ class SceneGenerator {
 
     return imageGenScene;
   }
+
+  GenSendAllScene() {
+    const sendAllScene = new Scenes.BaseScene("sendAllScene");
+
+    sendAllScene.enter(
+      async (ctx) =>
+        await ctx.reply("Введите сообщение которое хотите всем отправить: ")
+    );
+
+    sendAllScene.on("message", async (ctx) => {
+      try {
+        const users = await User.find({});
+
+        let msg = "";
+        let photoPath = "";
+
+        if (ctx.message.text) {
+          msg = ctx.message.text;
+        } else {
+          photoPath = await ctx.message.photo[0];
+        }
+
+        await users.forEach(async (user, i) => {
+          setTimeout(async () => {
+            if (ctx.message.text) {
+              await bot.telegram.sendMessage(user.chatId, msg);
+            } else {
+              msg = ctx.message.caption || "";
+
+              await bot.telegram.sendPhoto(user.chatId, photoPath.file_id, {
+                caption: msg,
+              });
+            }
+          }, 100 * ++i);
+        });
+        ctx.scene.leave();
+      } catch (e) {
+        console.log(e);
+      }
+    });
+
+    return sendAllScene;
+  }
 }
 
 export default SceneGenerator;
