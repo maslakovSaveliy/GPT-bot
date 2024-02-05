@@ -12,37 +12,14 @@ import XLSX from "xlsx";
 
 const curScene = new SceneGenerator();
 const imageGenScene = curScene.GenImageScene();
-const sendAllScene = curScene.GenSendAllScene();
 
 const bot = new Telegraf(config.get("TELEGRAM_TOKEN"));
 const DB_URL =
   "mongodb+srv://user:user@cluster0.xf08cpi.mongodb.net/?retryWrites=true&w=majority";
-const stage = new Scenes.Stage([imageGenScene, sendAllScene]);
+const stage = new Scenes.Stage([imageGenScene]);
 
 bot.use(session());
 bot.use(stage.middleware());
-
-bot.command("users", async (ctx) => {
-  try {
-    if (ctx.from.username === "kazakevichr" || ctx.from.username === "eepppc") {
-      const users = await User.find({});
-      const workbook = XLSX.utils.book_new();
-      const sheetData = [["ID", "Username"]];
-      const arr = [];
-      users.map((el) => {
-        arr.push([`${el.id}`, `${el.username}`]);
-      });
-      const sheet = XLSX.utils.aoa_to_sheet([...sheetData, ...arr]);
-      XLSX.utils.book_append_sheet(workbook, sheet, "Users");
-      const excelFilePath = "./users.xlsx";
-      XLSX.writeFile(workbook, excelFilePath);
-      await ctx.replyWithDocument({ source: "./users.xlsx" });
-      removeFile("./users.xlsx");
-    }
-  } catch (e) {
-    console.log(e);
-  }
-});
 
 bot.command("new", async (ctx) => {
   const userID = ctx.from.id;
