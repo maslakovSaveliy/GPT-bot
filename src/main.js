@@ -69,6 +69,10 @@ bot.command("new", async (ctx) => {
   await ctx.reply(code("Жду вашего сообщения!"));
 });
 
+// await ctx.getChatMember("@dobro_digital", ctx.chat.id)
+// if (s.status === "left") {
+// ctx.telegram.sendMessage(ctx.chat.id, "не подписан");
+
 bot.command("image", async (ctx) => {
   ctx.scene.enter("imageGenScene");
 });
@@ -80,17 +84,31 @@ bot.help(async (ctx) => {
 });
 
 bot.start(async (ctx) => {
-  const userID = ctx.from.id;
-  ctx.session = {
-    [userID]: [],
-  };
-  await ctx.reply(
-    code(`Жду вашего сообщения!
-Для запуска нового диалога просто введите /new
-Если хотите сгенерировать изображение введите /image
-Если понадобится помошь, введите /help
-  `)
-  );
+  try {
+    const userID = ctx.from.id;
+
+    const userDB = await User.findOne({ id: userID });
+    if (userDB === undefined || userDB === null) {
+      await User.create({
+        id: userID,
+        username: ctx.from.username,
+        chatId: ctx.chat.id,
+      });
+    }
+
+    ctx.session = {
+      [userID]: [],
+    };
+    await ctx.reply(
+      code(`Жду вашего сообщения!
+  Для запуска нового диалога просто введите /new
+  Если хотите сгенерировать изображение введите /image
+  Если понадобится помошь, введите /help
+    `)
+    );
+  } catch (e) {
+    console.log(e);
+  }
 });
 
 bot.on(message("voice"), async (ctx) => {
