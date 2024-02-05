@@ -19,23 +19,8 @@ const DB_URL =
   "mongodb+srv://user:user@cluster0.xf08cpi.mongodb.net/?retryWrites=true&w=majority";
 const stage = new Scenes.Stage([imageGenScene, sendAllScene]);
 
-mongoose
-  .connect(DB_URL)
-  .then(() => {
-    console.log("DB Connect");
-  })
-  .catch((e) => {
-    console.log(e);
-  });
-
 bot.use(session());
 bot.use(stage.middleware());
-
-bot.command("sendAll", async (ctx) => {
-  if (ctx.from.username === "kazakevichr" || ctx.from.username === "eepppc") {
-    ctx.scene.enter("sendAllScene");
-  }
-});
 
 bot.command("users", async (ctx) => {
   try {
