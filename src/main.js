@@ -62,19 +62,27 @@ bot.command("users", async (ctx) => {
 });
 
 bot.command("new", async (ctx) => {
-  const userID = ctx.from.id;
-  ctx.session = {
-    [userID]: [],
-  };
-  await ctx.reply(code("Жду вашего сообщения!"));
+  const pass = await bot.telegram.getChatMember("@dobro_digital", ctx.chat.id);
+
+  if (pass.status === "left") {
+    ctx.reply("Для использования подпишись на https://t.me/dobro_digital");
+  } else {
+    const userID = ctx.from.id;
+    ctx.session = {
+      [userID]: [],
+    };
+    await ctx.reply(code("Жду вашего сообщения!"));
+  }
 });
 
-// await ctx.getChatMember("@dobro_digital", ctx.chat.id)
-// if (s.status === "left") {
-// ctx.telegram.sendMessage(ctx.chat.id, "не подписан");
-
 bot.command("image", async (ctx) => {
-  ctx.scene.enter("imageGenScene");
+  const pass = await bot.telegram.getChatMember("@dobro_digital", ctx.chat.id);
+
+  if (pass.status === "left") {
+    ctx.reply("Для использования подпишись на https://t.me/dobro_digital");
+  } else {
+    ctx.scene.enter("imageGenScene");
+  }
 });
 
 bot.help(async (ctx) => {
@@ -84,89 +92,107 @@ bot.help(async (ctx) => {
 });
 
 bot.start(async (ctx) => {
-  try {
-    const userID = ctx.from.id;
+  const pass = await bot.telegram.getChatMember("@dobro_digital", ctx.chat.id);
 
-    const userDB = await User.findOne({ id: userID });
-    if (userDB === undefined || userDB === null) {
-      await User.create({
-        id: userID,
-        username: ctx.from.username,
-        chatId: ctx.chat.id,
-      });
+  if (pass.status === "left") {
+    ctx.reply("Для использования подпишись на https://t.me/dobro_digital");
+  } else {
+    try {
+      const userID = ctx.from.id;
+
+      const userDB = await User.findOne({ id: userID });
+      if (userDB === undefined || userDB === null) {
+        await User.create({
+          id: userID,
+          username: ctx.from.username,
+          chatId: ctx.chat.id,
+        });
+      }
+
+      ctx.session = {
+        [userID]: [],
+      };
+      await ctx.reply(
+        code(`Жду вашего сообщения!
+    Для запуска нового диалога просто введите /new
+    Если хотите сгенерировать изображение введите /image
+    Если понадобится помошь, введите /help
+      `)
+      );
+    } catch (e) {
+      console.log(e);
     }
-
-    ctx.session = {
-      [userID]: [],
-    };
-    await ctx.reply(
-      code(`Жду вашего сообщения!
-  Для запуска нового диалога просто введите /new
-  Если хотите сгенерировать изображение введите /image
-  Если понадобится помошь, введите /help
-    `)
-    );
-  } catch (e) {
-    console.log(e);
   }
 });
 
 bot.on(message("voice"), async (ctx) => {
-  const userID = String(ctx.from.id);
-  ctx.session ??= {
-    [userID]: [],
-  };
-  try {
-    const { message_id } = await ctx.reply("Выолнение запроса...");
-    const link = await ctx.telegram.getFileLink(ctx.message.voice.file_id);
-    const userID = String(ctx.message.from.id);
-    const oggPath = await ogg.create(link.href, userID);
-    const mp3Path = await ogg.toMp3(oggPath, userID);
+  const pass = await bot.telegram.getChatMember("@dobro_digital", ctx.chat.id);
 
-    const text = await openai.transcription(mp3Path);
-    removeFile(mp3Path);
-    await ctx.reply(code(`Ваш запрос: ${text}`));
-    ctx.session[userID].push({ role: openai.roles.USER, content: text });
+  if (pass.status === "left") {
+    ctx.reply("Для использования подпишись на https://t.me/dobro_digital");
+  } else {
+    const userID = String(ctx.from.id);
+    ctx.session ??= {
+      [userID]: [],
+    };
+    try {
+      const { message_id } = await ctx.reply("Выолнение запроса...");
+      const link = await ctx.telegram.getFileLink(ctx.message.voice.file_id);
+      const userID = String(ctx.message.from.id);
+      const oggPath = await ogg.create(link.href, userID);
+      const mp3Path = await ogg.toMp3(oggPath, userID);
 
-    const res = await openai.chat(ctx.session[userID]);
-    ctx.session[userID].push({
-      role: openai.roles.ASSISTANT,
-      content: res.content,
-    });
+      const text = await openai.transcription(mp3Path);
+      removeFile(mp3Path);
+      await ctx.reply(code(`Ваш запрос: ${text}`));
+      ctx.session[userID].push({ role: openai.roles.USER, content: text });
 
-    await ctx.reply(res.content);
-    await ctx.telegram.deleteMessage(ctx.chat.id, message_id);
-  } catch (e) {
-    await ctx.reply("Произошла ошибка, перезагрузите бота командой /start");
-    console.log(e.message);
+      const res = await openai.chat(ctx.session[userID]);
+      ctx.session[userID].push({
+        role: openai.roles.ASSISTANT,
+        content: res.content,
+      });
+
+      await ctx.reply(res.content);
+      await ctx.telegram.deleteMessage(ctx.chat.id, message_id);
+    } catch (e) {
+      await ctx.reply("Произошла ошибка, перезагрузите бота командой /start");
+      console.log(e.message);
+    }
   }
 });
 
 bot.on(message("text"), async (ctx) => {
-  const userID = String(ctx.from.id);
-  ctx.session ??= {
-    [userID]: [],
-  };
-  try {
-    const { message_id } = await ctx.reply("Выолнение запроса...");
+  const pass = await bot.telegram.getChatMember("@dobro_digital", ctx.chat.id);
 
-    ctx.session[userID].push({
-      role: openai.roles.USER,
-      content: ctx.message.text,
-    });
+  if (pass.status === "left") {
+    ctx.reply("Для использования подпишись на https://t.me/dobro_digital");
+  } else {
+    const userID = String(ctx.from.id);
+    ctx.session ??= {
+      [userID]: [],
+    };
+    try {
+      const { message_id } = await ctx.reply("Выолнение запроса...");
 
-    console.log(ctx.session[userID]);
-    const res = await openai.chat(ctx.session[userID]);
-    ctx.session[userID].push({
-      role: openai.roles.ASSISTANT,
-      content: res.content,
-    });
+      ctx.session[userID].push({
+        role: openai.roles.USER,
+        content: ctx.message.text,
+      });
 
-    await ctx.reply(res.content);
-    await ctx.telegram.deleteMessage(ctx.chat.id, message_id);
-  } catch (e) {
-    await ctx.reply("Произошла ошибка, перезагрузите бота командой /start");
-    console.log(e.message);
+      console.log(ctx.session[userID]);
+      const res = await openai.chat(ctx.session[userID]);
+      ctx.session[userID].push({
+        role: openai.roles.ASSISTANT,
+        content: res.content,
+      });
+
+      await ctx.reply(res.content);
+      await ctx.telegram.deleteMessage(ctx.chat.id, message_id);
+    } catch (e) {
+      await ctx.reply("Произошла ошибка, перезагрузите бота командой /start");
+      console.log(e.message);
+    }
   }
 });
 
