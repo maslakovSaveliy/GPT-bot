@@ -104,7 +104,7 @@ bot.start(async (ctx) => {
       if (userDB === undefined || userDB === null) {
         await User.create({
           id: userID,
-          username: ctx.from.username,
+          username: ctx.from.username || "",
           chatId: ctx.chat.id,
         });
       }
