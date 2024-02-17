@@ -2,6 +2,7 @@ import { Scenes, Telegraf } from "telegraf";
 import { openai } from "./openai.js";
 import User from "./User.js";
 import config from "config";
+import { getMainMenu, getSecondMenu } from "./keyboard.js";
 
 const bot = new Telegraf(config.get("TELEGRAM_TOKEN"));
 
@@ -11,11 +12,16 @@ class SceneGenerator {
 
     imageGenScene.enter((ctx) =>
       ctx.reply(
-        "Я помогу тебе с генерацией изображений. Что ты хочешь увидеть?"
+        "Я помогу тебе с генерацией изображений. Что ты хочешь увидеть?",
+        getSecondMenu()
       )
     );
 
     imageGenScene.command("leave", async (ctx) => {
+      await ctx.scene.leave();
+    });
+
+    imageGenScene.hears("Покинуть генерацию изображений", async (ctx) => {
       await ctx.scene.leave();
     });
 
@@ -41,7 +47,8 @@ class SceneGenerator {
 
     imageGenScene.leave((ctx) => {
       ctx.reply(
-        "Вы покинули генерацию изображений. Можете продолжить свой диалог"
+        "Вы покинули генерацию изображений. Можете продолжить свой диалог",
+        getMainMenu()
       );
     });
 

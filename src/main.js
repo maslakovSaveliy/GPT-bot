@@ -9,6 +9,7 @@ import SceneGenerator from "./Scenes.js";
 import mongoose from "mongoose";
 import User from "./User.js";
 import XLSX from "xlsx";
+import { getMainMenu } from "./keyboard.js";
 
 const curScene = new SceneGenerator();
 const imageGenScene = curScene.GenImageScene();
@@ -32,6 +33,7 @@ mongoose
 
 bot.use(session());
 bot.use(stage.middleware());
+// bot.use(subscribeCheck);
 
 bot.command("sendAll", async (ctx) => {
   if (ctx.from.username === "kazakevichr" || ctx.from.username === "eepppc") {
@@ -74,9 +76,11 @@ bot.command("image", subscribeCheck, async (ctx) => {
 });
 
 bot.help(async (ctx) => {
-  await ctx.reply(`/new - создание нового диалога
+  await ctx.reply(
+    `/new - создание нового диалога
 /image - переход в режим генерации изображений
-/leave - выход из режима генерации изображений`);
+/leave - выход из режима генерации изображений`
+  );
 });
 
 bot.start(subscribeCheck, async (ctx) => {
@@ -101,11 +105,57 @@ bot.start(subscribeCheck, async (ctx) => {
     Если хотите сгенерировать изображение введите /image
     Если понадобится помошь, введите /help
       `),
-      Markup.keyboard([["туц"]]).resize()
+      getMainMenu()
     );
   } catch (e) {
     console.log(e);
   }
+});
+
+bot.hears("Перезагрузить бота", subscribeCheck, async (ctx) => {
+  try {
+    const userID = ctx.from.id;
+
+    const userDB = await User.findOne({ id: userID });
+    if (userDB === undefined || userDB === null) {
+      await User.create({
+        id: userID,
+        username: ctx.from.username || "",
+        chatId: ctx.chat.id,
+      });
+    }
+
+    ctx.session = {
+      [userID]: [],
+    };
+    await ctx.reply(
+      code(`Жду вашего сообщения!
+    Для запуска нового диалога просто введите /new
+    Если хотите сгенерировать изображение введите /image
+    Если понадобится помошь, введите /help
+      `)
+    );
+  } catch (e) {
+    console.log(e);
+  }
+});
+
+bot.hears("Режим генерации изображений", subscribeCheck, async (ctx) => {
+  ctx.scene.enter("imageGenScene");
+});
+
+bot.hears("Сбросить историю", subscribeCheck, async (ctx) => {
+  const userID = ctx.from.id;
+  ctx.session = {
+    [userID]: [],
+  };
+  await ctx.reply(code("Жду вашего сообщения!"));
+});
+
+bot.hears("Помощь", subscribeCheck, async (ctx) => {
+  await ctx.reply(`/new - создание нового диалога
+/image - переход в режим генерации изображений
+/leave - выход из режима генерации изображений`);
 });
 
 bot.on(message("voice"), subscribeCheck, async (ctx) => {
@@ -114,7 +164,7 @@ bot.on(message("voice"), subscribeCheck, async (ctx) => {
     [userID]: [],
   };
   try {
-    const { message_id } = await ctx.reply("Выолнение запроса...");
+    const { message_id } = await ctx.reply("Выполнение запроса...");
     const link = await ctx.telegram.getFileLink(ctx.message.voice.file_id);
     const userID = String(ctx.message.from.id);
     const oggPath = await ogg.create(link.href, userID);
@@ -131,7 +181,7 @@ bot.on(message("voice"), subscribeCheck, async (ctx) => {
       content: res.content,
     });
 
-    await ctx.reply(res.content);
+    await ctx.reply(res.content, getMainMenu());
     await ctx.telegram.deleteMessage(ctx.chat.id, message_id);
   } catch (e) {
     await ctx.reply("Произошла ошибка, перезагрузите бота командой /start");
@@ -145,7 +195,7 @@ bot.on(message("text"), subscribeCheck, async (ctx) => {
     [userID]: [],
   };
   try {
-    const { message_id } = await ctx.reply("Выолнение запроса...");
+    const { message_id } = await ctx.reply("Выполнение запроса...");
 
     ctx.session[userID].push({
       role: openai.roles.USER,
@@ -159,7 +209,7 @@ bot.on(message("text"), subscribeCheck, async (ctx) => {
       content: res.content,
     });
 
-    await ctx.reply(res.content);
+    await ctx.reply(res.content, getMainMenu());
     await ctx.telegram.deleteMessage(ctx.chat.id, message_id);
   } catch (e) {
     await ctx.reply("Произошла ошибка, перезагрузите бота командой /start");
