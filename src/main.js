@@ -1,6 +1,5 @@
-import { Telegraf, session, Scenes, Markup } from "telegraf";
+import { Telegraf, session, Scenes } from "telegraf";
 import { message } from "telegraf/filters";
-import { code } from "telegraf/format";
 import config from "config";
 import { ogg } from "./ogg.js";
 import { openai } from "./openai.js";
@@ -68,19 +67,11 @@ bot.command("new", subscribeCheck, async (ctx) => {
   ctx.session = {
     [userID]: [],
   };
-  await ctx.reply(code("Жду вашего сообщения!"));
+  await ctx.reply("Жду вашего сообщения!");
 });
 
 bot.command("image", subscribeCheck, async (ctx) => {
   ctx.scene.enter("imageGenScene");
-});
-
-bot.help(async (ctx) => {
-  await ctx.reply(
-    `/new - создание нового диалога
-/image - переход в режим генерации изображений
-/leave - выход из режима генерации изображений`
-  );
 });
 
 bot.start(subscribeCheck, async (ctx) => {
@@ -99,14 +90,7 @@ bot.start(subscribeCheck, async (ctx) => {
     ctx.session = {
       [userID]: [],
     };
-    await ctx.reply(
-      code(`Жду вашего сообщения!
-    Для запуска нового диалога просто введите /new
-    Если хотите сгенерировать изображение введите /image
-    Если понадобится помошь, введите /help
-      `),
-      getMainMenu()
-    );
+    await ctx.reply(`Напиши мне что-нибудь или дай задание`, getMainMenu());
   } catch (e) {
     console.log(e);
   }
@@ -128,13 +112,7 @@ bot.hears("Перезагрузить бота", subscribeCheck, async (ctx) => 
     ctx.session = {
       [userID]: [],
     };
-    await ctx.reply(
-      code(`Жду вашего сообщения!
-    Для запуска нового диалога просто введите /new
-    Если хотите сгенерировать изображение введите /image
-    Если понадобится помошь, введите /help
-      `)
-    );
+    await ctx.reply(`Напиши мне что-нибудь или дай задание`, getMainMenu());
   } catch (e) {
     console.log(e);
   }
@@ -149,13 +127,7 @@ bot.hears("Сбросить историю", subscribeCheck, async (ctx) => {
   ctx.session = {
     [userID]: [],
   };
-  await ctx.reply(code("Жду вашего сообщения!"));
-});
-
-bot.hears("Помощь", subscribeCheck, async (ctx) => {
-  await ctx.reply(`/new - создание нового диалога
-/image - переход в режим генерации изображений
-/leave - выход из режима генерации изображений`);
+  await ctx.reply("Жду вашего сообщения!");
 });
 
 bot.on(message("voice"), subscribeCheck, async (ctx) => {
@@ -172,7 +144,7 @@ bot.on(message("voice"), subscribeCheck, async (ctx) => {
 
     const text = await openai.transcription(mp3Path);
     removeFile(mp3Path);
-    await ctx.reply(code(`Ваш запрос: ${text}`));
+    await ctx.reply(`Ваш запрос: ${text}`);
     ctx.session[userID].push({ role: openai.roles.USER, content: text });
 
     const res = await openai.chat(ctx.session[userID]);
@@ -184,7 +156,9 @@ bot.on(message("voice"), subscribeCheck, async (ctx) => {
     await ctx.reply(res.content, getMainMenu());
     await ctx.telegram.deleteMessage(ctx.chat.id, message_id);
   } catch (e) {
-    await ctx.reply("Произошла ошибка, перезагрузите бота командой /start");
+    await ctx.reply(
+      "Упс, произошла ошибка, для работы нужно мне перезагрузить командой /start"
+    );
     console.log(e.message);
   }
 });
@@ -212,7 +186,9 @@ bot.on(message("text"), subscribeCheck, async (ctx) => {
     await ctx.reply(res.content, getMainMenu());
     await ctx.telegram.deleteMessage(ctx.chat.id, message_id);
   } catch (e) {
-    await ctx.reply("Произошла ошибка, перезагрузите бота командой /start");
+    await ctx.reply(
+      "Упс, произошла ошибка, для работы нужно мне перезагрузить командой /start"
+    );
     console.log(e.message);
   }
 });

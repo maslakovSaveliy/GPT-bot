@@ -15,7 +15,7 @@ export async function removeFile(path) {
 }
 
 export async function subscribeCheck(ctx, next) {
-  const pass = await bot.telegram.getChatMember("@dobro_digital", ctx.chat.id);
+  const pass = "";
   if (pass.status === "left") {
     ctx.reply("Для использования подпишись на https://t.me/dobro_digital");
   } else {
