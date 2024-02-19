@@ -17,8 +17,7 @@ const sendAllScene = curScene.GenSendAllScene();
 const bot = new Telegraf(config.get("TELEGRAM_TOKEN"), {
   handlerTimeout: Infinity,
 });
-const DB_URL =
-  "mongodb+srv://user:user@cluster0.xf08cpi.mongodb.net/?retryWrites=true&w=majority";
+const DB_URL = config.get("DB_PASS");
 const stage = new Scenes.Stage([imageGenScene, sendAllScene]);
 
 mongoose
