@@ -31,7 +31,6 @@ mongoose
 
 bot.use(session());
 bot.use(stage.middleware());
-// bot.use(subscribeCheck);
 
 bot.command("sendAll", async (ctx) => {
   if (ctx.from.username === "kazakevichr" || ctx.from.username === "eepppc") {
@@ -74,21 +73,20 @@ bot.command("image", subscribeCheck, async (ctx) => {
 });
 
 bot.start(subscribeCheck, async (ctx) => {
+  const userID = ctx.from.id;
+  ctx.session = {
+    [userID]: [],
+  };
   try {
-    const userID = ctx.from.id;
-
     const userDB = await User.findOne({ id: userID });
     if (userDB === undefined || userDB === null) {
       await User.create({
         id: userID,
-        username: ctx.from.username || "",
+        username: ctx.from.username ? ctx.from.username : `${userID}`,
         chatId: ctx.chat.id,
       });
     }
 
-    ctx.session = {
-      [userID]: [],
-    };
     await ctx.reply(`Напиши мне что-нибудь или дай задание`, getMainMenu());
   } catch (e) {
     console.log(e);
