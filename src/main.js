@@ -183,9 +183,7 @@ bot.on(message("text"), subscribeCheck, async (ctx) => {
     await ctx.reply(res.content, getMainMenu());
     await ctx.telegram.deleteMessage(ctx.chat.id, message_id);
   } catch (e) {
-    await ctx.reply(
-      "Упс, произошла ошибка, для работы нужно мне перезагрузить командой /start"
-    );
+    await ctx.reply("Нужно перезапустить бота. Нажми на /start");
     console.log(e.message);
   }
 });
